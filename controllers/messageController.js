@@ -4,7 +4,7 @@ const { sendMail } = require("../utils/mailer");
 
 const createMessage = async (req, res, next) => {
   try {
-    const { name, email, countryCode, phoneNumber, message } = req.body;
+    const { name, email, message } = req.body;
 
     // Basic validation
     if (!name || !email || !message) {
