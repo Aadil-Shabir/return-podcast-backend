@@ -3,6 +3,7 @@ require("dotenv").config();
 const express = require("express");
 const helmet = require("helmet");
 // const cors = require("cors");
+const productRoutes = require("./routes/products");
 
 const connectDB = require("./config/db");
 const messageRoutes = require("./routes/messages");
@@ -31,6 +32,7 @@ app.use("/api/messages", messageRoutes);
 
 app.use("/api/episodes", episodeRoutes);
 app.use("/api/pitch", pitchRoutes);
+app.use("/api/products", productRoutes);
 
 // healthcheck
 app.get("/api/health", (req, res) => res.json({ status: "ok" }));
