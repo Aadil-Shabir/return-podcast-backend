@@ -1,10 +1,7 @@
 // controllers/pitchController.js
 const Pitch = require("../models/Pitch");
+const { sendMail } = require("../utils/mailer");
 
-/**
- * Create a new pitch
- * POST /api/pitch
- */
 const createPitch = async (req, res, next) => {
   try {
     const {
@@ -39,7 +36,7 @@ const createPitch = async (req, res, next) => {
       return res.status(400).json({ error: "Consent is required." });
     }
 
-    // Create
+    // Create pitch
     const newPitch = await Pitch.create({
       fullName: String(fullName).trim(),
       companyName: companyName ? String(companyName).trim() : "",
@@ -55,16 +52,54 @@ const createPitch = async (req, res, next) => {
       consent: true,
     });
 
+    // ----- ✅ EMAIL NOTIFICATION LOGIC -----
+    try {
+      const adminEmail = process.env.ADMIN_EMAIL;
+      const fromEmail = process.env.FROM_EMAIL || `no-reply@${req.hostname}`;
+
+      if (adminEmail) {
+        const subject = `New Pitch Submission from ${fullName}`;
+        const html = `
+          <h2>New Pitch Received</h2>
+          <p><strong>Full Name:</strong> ${fullName}</p>
+          <p><strong>Company Name:</strong> ${companyName || "-"}</p>
+          <p><strong>Email:</strong> ${email}</p>
+          <p><strong>Phone:</strong> ${phone || "-"}</p>
+          <p><strong>Category:</strong> ${pitchCategory}</p>
+          <p><strong>Stage:</strong> ${stage}</p>
+          <p><strong>Funding Goal:</strong> ${fundingGoal || "-"}</p>
+          <p><strong>One Sentence Summary:</strong><br>${oneSentenceSummary}</p>
+          <p><strong>Why You:</strong><br>${whyYou}</p>
+          <p><strong>Pitch Video:</strong><br><a href="${pitchVideo}" target="_blank">${pitchVideo}</a></p>
+          ${
+            logoOrDeck
+              ? `<p><strong>Logo / Deck:</strong><br><a href="${logoOrDeck}" target="_blank">${logoOrDeck}</a></p>`
+              : ""
+          }
+          <hr>
+          <p>IP: ${req.ip}</p>
+        `;
+
+        await sendMail({
+          from: fromEmail,
+          to: adminEmail,
+          subject,
+          html,
+          text: `${fullName} submitted a pitch. Category: ${pitchCategory} Stage: ${stage}`,
+        });
+      }
+    } catch (mailErr) {
+      console.error("Pitch email send error", mailErr);
+      // do not block response on mail fail
+    }
+    // ------------------------------------------------------
+
     res.status(201).json(newPitch);
   } catch (err) {
     next(err);
   }
 };
 
-/**
- * Get all pitches
- * GET /api/pitch
- */
 const getAllPitches = async (req, res, next) => {
   try {
     const pitches = await Pitch.find().sort({ createdAt: -1 });
@@ -74,10 +109,6 @@ const getAllPitches = async (req, res, next) => {
   }
 };
 
-/**
- * Get one pitch by id
- * GET /api/pitch/:id
- */
 const getPitchById = async (req, res, next) => {
   try {
     const pitch = await Pitch.findById(req.params.id);

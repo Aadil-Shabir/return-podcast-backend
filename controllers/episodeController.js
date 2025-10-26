@@ -3,13 +3,28 @@ const Episode = require("../models/Episode");
 
 const createEpisode = async (req, res, next) => {
   try {
-    const { title, youtubeLink, author, spotifyLink, description, tag } =
-      req.body;
+    const {
+      title,
+      youtubeLink,
+      author,
+      spotifyLink,
+      description,
+      tag,
+      mainEpisode,
+    } = req.body;
 
     if (!title || !youtubeLink || !author) {
       return res
         .status(400)
         .json({ error: "title, youtubeLink and author are required" });
+    }
+
+    // ✅ If this episode is being marked as main, unset previous main
+    if (mainEpisode === true) {
+      await Episode.updateMany(
+        { mainEpisode: true },
+        { $set: { mainEpisode: false } }
+      );
     }
 
     const ep = await Episode.create({
@@ -18,7 +33,8 @@ const createEpisode = async (req, res, next) => {
       author,
       spotifyLink: spotifyLink || "",
       description: description || "",
-      tag: tag || "", // ✅ added here
+      tag: tag || "",
+      mainEpisode: mainEpisode || false,
     });
 
     res.status(201).json(ep);
@@ -48,12 +64,21 @@ const getEpisode = async (req, res, next) => {
 
 const updateEpisode = async (req, res, next) => {
   try {
-    // tag is included automatically if passed in req.body
-    const updates = req.body;
+    const { mainEpisode } = req.body;
 
-    const ep = await Episode.findByIdAndUpdate(req.params.id, updates, {
+    // ✅ If this update tries to set mainEpisode=true,
+    // unset previous main first (except this episode itself)
+    if (mainEpisode === true) {
+      await Episode.updateMany(
+        { _id: { $ne: req.params.id }, mainEpisode: true },
+        { $set: { mainEpisode: false } }
+      );
+    }
+
+    const ep = await Episode.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
     });
+
     if (!ep) return res.status(404).json({ error: "Not found" });
 
     res.json(ep);

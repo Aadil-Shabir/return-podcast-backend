@@ -10,6 +10,7 @@ const EpisodeSchema = new mongoose.Schema({
   tag: { type: String, default: "" },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date },
+  mainEpisode: { type: Boolean, default: false },
 });
 
 EpisodeSchema.pre("save", function (next) {
