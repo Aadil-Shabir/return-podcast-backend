@@ -37,7 +37,8 @@ const createMessage = async (req, res, next) => {
         `;
 
         await sendMail({
-          from: fromEmail,
+          from: `"${name}" <${fromEmail}>`,
+          replyTo: email,
           to: adminEmail,
           subject,
           html,

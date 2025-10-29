@@ -81,7 +81,8 @@ const createPitch = async (req, res, next) => {
         `;
 
         await sendMail({
-          from: fromEmail,
+          from: `"${fullName}" <${fromEmail}>`,
+          replyTo: email,
           to: adminEmail,
           subject,
           html,
