@@ -23,26 +23,34 @@ const createMessage = async (req, res, next) => {
     // Send notification email to admin
     try {
       const adminEmail = process.env.ADMIN_EMAIL;
-      const fromEmail = process.env.FROM_EMAIL || `no-reply@${req.hostname}`;
+      const fromEmail = process.env.FROM_EMAIL || process.env.ADMIN_EMAIL; // Your authenticated Gmail
 
-      if (adminEmail) {
+      if (adminEmail && fromEmail) {
         const subject = `New contact message from ${name}`;
         const html = `
+          <h3>New Contact Form Submission</h3>
           <p><strong>Name:</strong> ${name}</p>
           <p><strong>Email:</strong> ${email}</p>
           <p><strong>Message:</strong></p>
-          <p>${message.replace(/\n/g, "<br>")}</p>
+          <p style="background: #f5f5f5; padding: 15px; border-left: 3px solid #0066cc;">
+            ${message.replace(/\n/g, "<br>")}
+          </p>
           <hr>
-          <p>IP: ${req.ip}</p>
+          <p style="color: #666; font-size: 12px;">
+            <strong>IP:</strong> ${req.ip}<br>
+            <strong>User Agent:</strong> ${req.headers["user-agent"]}
+          </p>
         `;
 
         await sendMail({
-          from: `"${name}" <${fromEmail}>`,
-          replyTo: email,
+          // ✅ Use user's name as display name, but your Gmail as the actual sender
+          from: `"${name} (via Contact Form)" <${fromEmail}>`,
+          // ✅ Set reply-to so you can click "Reply" and it goes to the user
+          replyTo: `"${name}" <${email}>`,
           to: adminEmail,
           subject,
           html,
-          text: message,
+          text: `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}\n\nIP: ${req.ip}`,
         });
       }
     } catch (mailErr) {

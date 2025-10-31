@@ -9,6 +9,7 @@ const connectDB = require("./config/db");
 const messageRoutes = require("./routes/messages");
 const episodeRoutes = require("./routes/episodes");
 const pitchRoutes = require("./routes/pitch");
+const userRoutes = require("./routes/user");
 const errorHandler = require("./middleware/errorHandler");
 const rateLimiter = require("./middleware/rateLimiter");
 const { initMailer } = require("./utils/mailer");
@@ -33,6 +34,7 @@ app.use("/api/messages", messageRoutes);
 app.use("/api/episodes", episodeRoutes);
 app.use("/api/pitch", pitchRoutes);
 app.use("/api/products", productRoutes);
+app.use("/api/users", userRoutes);
 
 // healthcheck
 app.get("/api/health", (req, res) => res.json({ status: "ok" }));

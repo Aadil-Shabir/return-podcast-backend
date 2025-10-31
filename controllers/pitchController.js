@@ -55,7 +55,7 @@ const createPitch = async (req, res, next) => {
     // ----- ✅ EMAIL NOTIFICATION LOGIC -----
     try {
       const adminEmail = process.env.ADMIN_EMAIL;
-      const fromEmail = process.env.FROM_EMAIL || `no-reply@${req.hostname}`;
+      const fromEmail = process.env.FROM_EMAIL || process.env.ADMIN_EMAIL;
 
       if (adminEmail) {
         const subject = `New Pitch Submission from ${fullName}`;
@@ -81,7 +81,7 @@ const createPitch = async (req, res, next) => {
         `;
 
         await sendMail({
-          from: `"${fullName}" <${fromEmail}>`,
+          from: `"${fullName} (via Contact Form)" <${fromEmail}>`,
           replyTo: email,
           to: adminEmail,
           subject,
