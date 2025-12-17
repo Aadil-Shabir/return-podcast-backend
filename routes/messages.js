@@ -6,6 +6,7 @@ const {
   createMessage,
   getMessages,
   getMessageById,
+  deleteMessage,
 } = require("../controllers/messageController");
 
 router.post("/", createMessage);
@@ -15,5 +16,6 @@ router.get("/", getMessages);
 
 // GET /api/messages/:id
 router.get("/:id", getMessageById);
+router.delete("/:id", deleteMessage);
 
 module.exports = router;

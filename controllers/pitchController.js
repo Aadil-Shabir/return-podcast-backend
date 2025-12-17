@@ -120,8 +120,35 @@ const getPitchById = async (req, res, next) => {
   }
 };
 
+const deletePitch = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    // Validate ID presence
+    if (!id) {
+      return res.status(400).json({ error: "Pitch ID is required." });
+    }
+
+    // Find pitch
+    const pitch = await Pitch.findById(id);
+    if (!pitch) {
+      return res.status(404).json({ error: "Pitch not found." });
+    }
+    // Delete pitch
+    await Pitch.findByIdAndDelete(id);
+
+    res.status(200).json({
+      message: "Pitch deleted successfully.",
+      deletedPitchId: id,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   createPitch,
   getAllPitches,
   getPitchById,
+  deletePitch,
 };

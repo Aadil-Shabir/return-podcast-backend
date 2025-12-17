@@ -6,6 +6,7 @@ const {
   createPitch,
   getAllPitches,
   getPitchById,
+  deletePitch,
 } = require("../controllers/pitchController");
 
 // POST   /api/pitch      -> create new pitch
@@ -16,5 +17,6 @@ router.get("/", getAllPitches);
 
 // GET    /api/pitch/:id  -> get single pitch
 router.get("/:id", getPitchById);
+router.delete("/:id", deletePitch);
 
 module.exports = router;
