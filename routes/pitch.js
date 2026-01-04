@@ -8,6 +8,7 @@ const {
   getPitchById,
   deletePitch,
 } = require("../controllers/pitchController");
+const upload = require("../middleware/upload");
 
 // POST   /api/pitch      -> create new pitch
 router.post("/", createPitch);

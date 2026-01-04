@@ -15,8 +15,10 @@ const createPitch = async (req, res, next) => {
       stage,
       fundingGoal,
       whyYou,
-      logoOrDeck,
       consent,
+      africanCountry,
+      logoOrDeck,
+      logoOrDeckMimeType,
     } = req.body;
 
     // Basic validation
@@ -30,6 +32,39 @@ const createPitch = async (req, res, next) => {
       !whyYou
     ) {
       return res.status(400).json({ error: "Missing required fields." });
+    }
+
+    let finalLogoOrDeck = "";
+    let finalLogoOrDeckMimeType = "";
+    let logoOrDeckSize = 0;
+
+    if (logoOrDeck && logoOrDeckMimeType) {
+      // Calculate size from base64 string
+      logoOrDeckSize = Math.ceil((logoOrDeck.length * 3) / 4);
+
+      // Validate size (12 MB = 12 * 1024 * 1024 bytes)
+      if (logoOrDeckSize > 12 * 1024 * 1024) {
+        return res.status(400).json({
+          error: "File too large. Maximum allowed is 12MB.",
+        });
+      }
+
+      finalLogoOrDeck = logoOrDeck;
+      finalLogoOrDeckMimeType = logoOrDeckMimeType;
+    }
+    // Handle file upload via multer (if you add it later)
+    else if (req.file) {
+      const fileSizeInBytes = req.file.size;
+
+      if (fileSizeInBytes > 12 * 1024 * 1024) {
+        return res.status(400).json({
+          error: "File too large. Maximum allowed is 12MB.",
+        });
+      }
+
+      finalLogoOrDeck = req.file.buffer.toString("base64");
+      finalLogoOrDeckMimeType = req.file.mimetype;
+      logoOrDeckSize = fileSizeInBytes;
     }
 
     if (consent !== true) {
@@ -48,7 +83,10 @@ const createPitch = async (req, res, next) => {
       stage: String(stage).trim(),
       fundingGoal: fundingGoal ? String(fundingGoal).trim() : "",
       whyYou: String(whyYou).trim(),
-      logoOrDeck: logoOrDeck ? String(logoOrDeck).trim() : "",
+      logoOrDeck: finalLogoOrDeck,
+      logoOrDeckMimeType: finalLogoOrDeckMimeType,
+      logoOrDeckSize,
+      africanCountry: africanCountry ? String(africanCountry).trim() : "",
       consent: true,
     });
 
@@ -66,6 +104,7 @@ const createPitch = async (req, res, next) => {
           <p><strong>Email:</strong> ${email}</p>
           <p><strong>Phone:</strong> ${phone || "-"}</p>
           <p><strong>Category:</strong> ${pitchCategory}</p>
+          <p><strong>Country:</strong> ${africanCountry}</p>
           <p><strong>Stage:</strong> ${stage}</p>
           <p><strong>Funding Goal:</strong> ${fundingGoal || "-"}</p>
           <p><strong>One Sentence Summary:</strong><br>${oneSentenceSummary}</p>
@@ -73,7 +112,7 @@ const createPitch = async (req, res, next) => {
           <p><strong>Pitch Video:</strong><br><a href="${pitchVideo}" target="_blank">${pitchVideo}</a></p>
           ${
             logoOrDeck
-              ? `<p><strong>Logo / Deck:</strong><br><a href="${logoOrDeck}" target="_blank">${logoOrDeck}</a></p>`
+              ? `<p><strong>Logo / Deck:</strong><br><a href="${finalLogoOrDeck}" target="_blank">${finalLogoOrDeck}</a></p>`
               : ""
           }
           <hr>
