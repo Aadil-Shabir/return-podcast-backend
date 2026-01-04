@@ -112,7 +112,7 @@ const createPitch = async (req, res, next) => {
           <p><strong>Pitch Video:</strong><br><a href="${pitchVideo}" target="_blank">${pitchVideo}</a></p>
           ${
             logoOrDeck
-              ? `<p><strong>Logo / Deck:</strong><br><a href="${finalLogoOrDeck}" target="_blank">${finalLogoOrDeck}</a></p>`
+              ? `<p><strong>Logo / Deck:</strong><br><a href="${logoOrDeck}" target="_blank">${logoOrDeck}</a></p>`
               : ""
           }
           <hr>
