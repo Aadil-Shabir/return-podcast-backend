@@ -17,8 +17,10 @@ const createPitch = async (req, res, next) => {
       whyYou,
       consent,
       africanCountry,
-      logoOrDeck,
-      logoOrDeckMimeType,
+      logoOrDeck, // ✅ Added
+      logoOrDeckMimeType, // ✅ Added
+      byAdmin,
+      winnerOfTheWeek,
     } = req.body;
 
     // Basic validation
@@ -34,41 +36,16 @@ const createPitch = async (req, res, next) => {
       return res.status(400).json({ error: "Missing required fields." });
     }
 
-    let finalLogoOrDeck = "";
-    let finalLogoOrDeckMimeType = "";
-    let logoOrDeckSize = 0;
-
-    if (logoOrDeck && logoOrDeckMimeType) {
-      // Calculate size from base64 string
-      logoOrDeckSize = Math.ceil((logoOrDeck.length * 3) / 4);
-
-      // Validate size (12 MB = 12 * 1024 * 1024 bytes)
-      if (logoOrDeckSize > 12 * 1024 * 1024) {
-        return res.status(400).json({
-          error: "File too large. Maximum allowed is 12MB.",
-        });
-      }
-
-      finalLogoOrDeck = logoOrDeck;
-      finalLogoOrDeckMimeType = logoOrDeckMimeType;
-    }
-    // Handle file upload via multer (if you add it later)
-    else if (req.file) {
-      const fileSizeInBytes = req.file.size;
-
-      if (fileSizeInBytes > 12 * 1024 * 1024) {
-        return res.status(400).json({
-          error: "File too large. Maximum allowed is 12MB.",
-        });
-      }
-
-      finalLogoOrDeck = req.file.buffer.toString("base64");
-      finalLogoOrDeckMimeType = req.file.mimetype;
-      logoOrDeckSize = fileSizeInBytes;
-    }
-
     if (consent !== true) {
       return res.status(400).json({ error: "Consent is required." });
+    }
+
+    // 🔐 WINNER OF THE WEEK LOGIC (CREATE)
+    if (winnerOfTheWeek === true) {
+      await Pitch.updateMany(
+        { winnerOfTheWeek: true },
+        { $set: { winnerOfTheWeek: false } }
+      );
     }
 
     // Create pitch
@@ -83,11 +60,18 @@ const createPitch = async (req, res, next) => {
       stage: String(stage).trim(),
       fundingGoal: fundingGoal ? String(fundingGoal).trim() : "",
       whyYou: String(whyYou).trim(),
-      logoOrDeck: finalLogoOrDeck,
-      logoOrDeckMimeType: finalLogoOrDeckMimeType,
-      logoOrDeckSize,
       africanCountry: africanCountry ? String(africanCountry).trim() : "",
       consent: true,
+
+      // ✅ Fixed: Added these fields to storage
+      logoOrDeck: logoOrDeck ? String(logoOrDeck).trim() : "",
+      logoOrDeckMimeType: logoOrDeckMimeType
+        ? String(logoOrDeckMimeType).trim()
+        : "",
+
+      // ✅ admin fields
+      byAdmin: byAdmin === true,
+      winnerOfTheWeek: winnerOfTheWeek === true,
     });
 
     // ----- ✅ EMAIL NOTIFICATION LOGIC -----
@@ -95,7 +79,7 @@ const createPitch = async (req, res, next) => {
       const adminEmail = process.env.ADMIN_EMAIL;
       const fromEmail = process.env.FROM_EMAIL || process.env.ADMIN_EMAIL;
 
-      if (adminEmail) {
+      if (adminEmail && !byAdmin) {
         const subject = `New Pitch Submission from ${fullName}`;
         const html = `
           <h2>New Pitch Received</h2>
@@ -106,6 +90,7 @@ const createPitch = async (req, res, next) => {
           <p><strong>Category:</strong> ${pitchCategory}</p>
           <p><strong>Country:</strong> ${africanCountry}</p>
           <p><strong>Stage:</strong> ${stage}</p>
+          <p><strong>Winner:</strong> ${winnerOfTheWeek}</p>
           <p><strong>Funding Goal:</strong> ${fundingGoal || "-"}</p>
           <p><strong>One Sentence Summary:</strong><br>${oneSentenceSummary}</p>
           <p><strong>Why You:</strong><br>${whyYou}</p>
@@ -130,11 +115,96 @@ const createPitch = async (req, res, next) => {
       }
     } catch (mailErr) {
       console.error("Pitch email send error", mailErr);
-      // do not block response on mail fail
     }
-    // ------------------------------------------------------
 
     res.status(201).json(newPitch);
+  } catch (err) {
+    next(err);
+  }
+};
+
+const updatePitch = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({ error: "Pitch ID is required." });
+    }
+
+    const pitch = await Pitch.findById(id);
+    if (!pitch) {
+      return res.status(404).json({ error: "Pitch not found." });
+    }
+
+    const {
+      fullName,
+      companyName,
+      email,
+      phone,
+      pitchCategory,
+      oneSentenceSummary,
+      pitchVideo,
+      stage,
+      fundingGoal,
+      whyYou,
+      africanCountry,
+      logoOrDeck, // ✅ Added
+      logoOrDeckMimeType, // ✅ Added
+      byAdmin,
+      winnerOfTheWeek,
+    } = req.body;
+
+    // 🔐 WINNER OF THE WEEK LOGIC
+    if (winnerOfTheWeek === true) {
+      await Pitch.updateMany(
+        { _id: { $ne: id }, winnerOfTheWeek: true },
+        { $set: { winnerOfTheWeek: false } }
+      );
+    }
+
+    // Step 2: Update current pitch
+    const updatedPitch = await Pitch.findByIdAndUpdate(
+      id,
+      {
+        ...(fullName !== undefined && { fullName: String(fullName).trim() }),
+        ...(companyName !== undefined && {
+          companyName: String(companyName).trim(),
+        }),
+        ...(email !== undefined && {
+          email: String(email).trim().toLowerCase(),
+        }),
+        ...(phone !== undefined && { phone: String(phone).trim() }),
+        ...(pitchCategory !== undefined && {
+          pitchCategory: String(pitchCategory).trim(),
+        }),
+        ...(oneSentenceSummary !== undefined && {
+          oneSentenceSummary: String(oneSentenceSummary).trim(),
+        }),
+        ...(pitchVideo !== undefined && {
+          pitchVideo: String(pitchVideo).trim(),
+        }),
+        ...(stage !== undefined && { stage: String(stage).trim() }),
+        ...(fundingGoal !== undefined && {
+          fundingGoal: String(fundingGoal).trim(),
+        }),
+        ...(whyYou !== undefined && { whyYou: String(whyYou).trim() }),
+        ...(africanCountry !== undefined && {
+          africanCountry: String(africanCountry).trim(),
+        }),
+        // ✅ Fixed: Added missing fields to the update object
+        ...(logoOrDeck !== undefined && {
+          logoOrDeck: String(logoOrDeck).trim(),
+        }),
+        ...(logoOrDeckMimeType !== undefined && {
+          logoOrDeckMimeType: String(logoOrDeckMimeType).trim(),
+        }),
+        ...(byAdmin !== undefined && { byAdmin }),
+        ...(winnerOfTheWeek !== undefined && { winnerOfTheWeek }),
+      },
+      { new: true }
+    );
+
+    res.status(200).json(updatedPitch);
   } catch (err) {
     next(err);
   }
@@ -162,18 +232,11 @@ const getPitchById = async (req, res, next) => {
 const deletePitch = async (req, res, next) => {
   try {
     const { id } = req.params;
+    if (!id) return res.status(400).json({ error: "Pitch ID is required." });
 
-    // Validate ID presence
-    if (!id) {
-      return res.status(400).json({ error: "Pitch ID is required." });
-    }
-
-    // Find pitch
     const pitch = await Pitch.findById(id);
-    if (!pitch) {
-      return res.status(404).json({ error: "Pitch not found." });
-    }
-    // Delete pitch
+    if (!pitch) return res.status(404).json({ error: "Pitch not found." });
+
     await Pitch.findByIdAndDelete(id);
 
     res.status(200).json({
@@ -190,4 +253,5 @@ module.exports = {
   getAllPitches,
   getPitchById,
   deletePitch,
+  updatePitch,
 };

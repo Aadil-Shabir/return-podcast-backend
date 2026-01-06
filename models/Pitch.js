@@ -13,6 +13,8 @@ const PitchSchema = new mongoose.Schema(
     stage: { type: String, required: true, trim: true },
     fundingGoal: { type: String, default: "", trim: true }, // stored as string per request
     whyYou: { type: String, required: true, trim: true },
+    winnerOfTheWeek: { type: Boolean, default: false },
+    byAdmin: { type: Boolean, default: false },
     logoOrDeck: { type: String, default: "", trim: true }, // URL to logo or deck
     logoOrDeckMimeType: {
       type: String,

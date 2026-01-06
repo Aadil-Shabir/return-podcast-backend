@@ -7,6 +7,7 @@ const {
   getAllPitches,
   getPitchById,
   deletePitch,
+  updatePitch,
 } = require("../controllers/pitchController");
 // const upload = require("../middleware/upload");
 
@@ -18,6 +19,7 @@ router.get("/", getAllPitches);
 
 // GET    /api/pitch/:id  -> get single pitch
 router.get("/:id", getPitchById);
+router.put("/:id", updatePitch);
 router.delete("/:id", deletePitch);
 
 module.exports = router;
