@@ -7,12 +7,12 @@ const PitchSchema = new mongoose.Schema(
     companyName: { type: String, default: "", trim: true },
     email: { type: String, required: true, trim: true, lowercase: true },
     phone: { type: String, default: "", trim: true },
-    pitchCategory: { type: String, required: true, trim: true },
-    oneSentenceSummary: { type: String, required: true, trim: true },
+    pitchCategory: { type: String, trim: true },
+    oneSentenceSummary: { type: String, trim: true },
     pitchVideo: { type: String, required: true, trim: true }, // URL
-    stage: { type: String, required: true, trim: true },
+    stage: { type: String, trim: true },
     fundingGoal: { type: String, default: "", trim: true }, // stored as string per request
-    whyYou: { type: String, required: true, trim: true },
+    whyYou: { type: String, trim: true },
     winnerOfTheWeek: { type: Boolean, default: false },
     byAdmin: { type: Boolean, default: false },
     logoOrDeck: { type: String, default: "", trim: true }, // URL to logo or deck
