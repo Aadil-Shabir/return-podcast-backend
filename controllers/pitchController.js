@@ -24,7 +24,7 @@ const createPitch = async (req, res, next) => {
     } = req.body;
 
     // Basic validation
-    if (!fullName || !email || !pitchVideo) {
+    if (!fullName || !email) {
       return res.status(400).json({ error: "Missing required fields." });
     }
 

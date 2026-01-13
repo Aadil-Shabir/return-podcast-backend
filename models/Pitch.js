@@ -9,7 +9,7 @@ const PitchSchema = new mongoose.Schema(
     phone: { type: String, default: "", trim: true },
     pitchCategory: { type: String, trim: true },
     oneSentenceSummary: { type: String, trim: true },
-    pitchVideo: { type: String, required: true, trim: true }, // URL
+    pitchVideo: { type: String, trim: true }, // URL
     stage: { type: String, trim: true },
     fundingGoal: { type: String, default: "", trim: true }, // stored as string per request
     whyYou: { type: String, trim: true },
