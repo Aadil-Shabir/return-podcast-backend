@@ -17,8 +17,6 @@ const createPitch = async (req, res, next) => {
       whyYou,
       consent,
       africanCountry,
-      logoOrDeck, // ✅ Added
-      logoOrDeckMimeType, // ✅ Added
       byAdmin,
       winnerOfTheWeek,
     } = req.body;
@@ -56,10 +54,6 @@ const createPitch = async (req, res, next) => {
       consent: true,
 
       // ✅ Fixed: Added these fields to storage
-      logoOrDeck: logoOrDeck ? String(logoOrDeck).trim() : "",
-      logoOrDeckMimeType: logoOrDeckMimeType
-        ? String(logoOrDeckMimeType).trim()
-        : "",
 
       // ✅ admin fields
       byAdmin: byAdmin === true,
@@ -87,11 +81,6 @@ const createPitch = async (req, res, next) => {
           <p><strong>One Sentence Summary:</strong><br>${oneSentenceSummary}</p>
           <p><strong>Why You:</strong><br>${whyYou}</p>
           <p><strong>Pitch Video:</strong><br><a href="${pitchVideo}" target="_blank">${pitchVideo}</a></p>
-          ${
-            logoOrDeck
-              ? `<p><strong>Logo / Deck:</strong><br><a href="${logoOrDeck}" target="_blank">${logoOrDeck}</a></p>`
-              : ""
-          }
           <hr>
           <p>IP: ${req.ip}</p>
         `;
@@ -140,8 +129,6 @@ const updatePitch = async (req, res, next) => {
       fundingGoal,
       whyYou,
       africanCountry,
-      logoOrDeck, // ✅ Added
-      logoOrDeckMimeType, // ✅ Added
       byAdmin,
       winnerOfTheWeek,
     } = req.body;
@@ -184,12 +171,7 @@ const updatePitch = async (req, res, next) => {
           africanCountry: String(africanCountry).trim(),
         }),
         // ✅ Fixed: Added missing fields to the update object
-        ...(logoOrDeck !== undefined && {
-          logoOrDeck: String(logoOrDeck).trim(),
-        }),
-        ...(logoOrDeckMimeType !== undefined && {
-          logoOrDeckMimeType: String(logoOrDeckMimeType).trim(),
-        }),
+
         ...(byAdmin !== undefined && { byAdmin }),
         ...(winnerOfTheWeek !== undefined && { winnerOfTheWeek }),
       },
