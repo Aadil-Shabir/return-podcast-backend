@@ -15,23 +15,6 @@ const PitchSchema = new mongoose.Schema(
     whyYou: { type: String, trim: true },
     winnerOfTheWeek: { type: Boolean, default: false },
     byAdmin: { type: Boolean, default: false },
-    logoOrDeck: { type: String, default: "", trim: true }, // URL to logo or deck
-    logoOrDeckMimeType: {
-      type: String,
-      default: "",
-      enum: [
-        "",
-        "image/jpeg",
-        "image/png",
-        "image/gif",
-        "image/webp",
-        "application/pdf",
-      ],
-    },
-    logoOrDeckSize: {
-      type: Number, // in bytes
-      default: 0,
-    },
     consent: { type: Boolean, required: true },
     africanCountry: { type: String, default: "" },
   },
